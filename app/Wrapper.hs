@@ -1,6 +1,7 @@
-module Wrapper where
+module Wrapper ( split, createUrl ) where
 
-baseUrl :: String = "https://export.arxiv.org/api/query?"
+baseUrl :: String
+baseUrl = "https://export.arxiv.org/api/query?"
 
 -- |Split a string on a delimiter character.
 --  Arguments:
@@ -89,6 +90,8 @@ parseArgument ( x:' ':xs ) = ( parser . init ) xs
             'm' -> parseMaxResults
             's' -> parseSort
             'o' -> parseOrder
+            _   -> \_ -> ""
+parseArgument _ = ""
 
 -- |Convert a query to an array of URL additions, split by dashes.
 --  Arguments:

@@ -1,4 +1,4 @@
-module Parser where
+module Parser ( Entry, parseFile ) where
 
 import qualified Text.HTML.TagSoup as TagSoup
 
