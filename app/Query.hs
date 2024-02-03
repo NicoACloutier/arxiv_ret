@@ -1,6 +1,5 @@
-module Query ( makeEntries ) where
+module Query where
 
-import qualified Parser
 import qualified Wrapper
 
 searchFieldOptions :: [String]
@@ -49,10 +48,10 @@ findSearch _ _ d = d
 convertSort :: String -> String
 convertSort "rel" = "relevance"
 convertSort "updated" = "lastUpdatedDate"
-convertSort "sumbitted" = "submittedDate"
+convertSort "submitted" = "submittedDate"
 convertSort "relevance" = "relevance"
 convertSort "lastUpdatedDate" = "lastUpdatedDate"
-convertSort "sumbittedDate" = "submittedDate"
+convertSort "submittedDate" = "submittedDate"
 convertSort _ = ""
 
 -- |Convert an improper query to its proper form.
@@ -103,7 +102,7 @@ getDefaults :: [String] -> [String]
 getDefaults d = [defField, defSearch, defBegin, defMaxResults, defSort, defOrder]
     where
         defField = findLine "f" d "cat"
-        defSearch = findLine "s" d "cs.CL"
+        defSearch = findLine "q" d "cs.CL"
         defBegin = findLine "b" d "0"
         defMaxResults = findLine "m" d "10"
         defSort = findLine "s" d "submitted"
@@ -111,10 +110,12 @@ getDefaults d = [defField, defSearch, defBegin, defMaxResults, defSort, defOrder
 
 -- |Make a userland query, returning the URL for arXiv retrieval.
 --  Arguments:
---      `String`: The userland query to parse.
+--      `[String]`: The userland query to parse.
 --      `String`: The .config file text, for default values.
 --  Returns:
 --      `String`: The URL for XML retrieval.
-query :: String -> String -> String
-query x d = toUrl x defs
-    where defs = getDefaults ( Wrapper.split ( == ( '\n' ) ) d )
+query :: [String] -> String -> String
+query x d = toUrl args defs
+    where 
+        defs = getDefaults ( Wrapper.split ( == ( '\n' ) ) d )
+        args = tail ( foldl (++) "" [ " " ++ arg | arg <- x ] )

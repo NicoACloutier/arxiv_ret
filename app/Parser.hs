@@ -1,4 +1,4 @@
-module Parser ( Entry, parseFile ) where
+module Parser where
 
 import qualified Text.HTML.TagSoup as TagSoup
 
@@ -74,10 +74,12 @@ findAllEntries entry = [current] ++ findAllEntries ( tail entry )
 --  Returns:
 --      `String`: The first link that matches this type.
 findLink :: String -> [TagSoup.Tag String] -> String
-findLink linkType ( x:xs ) = if ( possibleLink /= "" && TagSoup.fromAttrib "type" x == linkType )
-    then possibleLink
-    else findLink linkType xs
-        where possibleLink = TagSoup.fromAttrib "href" x
+findLink linkType ( x:xs ) = if ( TagSoup.isTagOpen x && 
+                                  possible /= "" && 
+                                  TagSoup.fromAttrib "type" x == linkType )
+                                then possible
+                                else findLink linkType xs
+                                    where possible = TagSoup.fromAttrib "href" x
 findLink _ _ = ""
 
 -- |Make an entry given only its internal structure.
@@ -90,7 +92,7 @@ makeEntry entryXml = Entry entryTitle entrySummary entryAuthors entryPdfLink ent
     where
         entryTitle = TagSoup.fromTagText ( head ( findTag "title" entryXml ) )
         entrySummary = TagSoup.fromTagText ( head ( findTag "summary" entryXml ) )
-        entryAuthors = findAllTags "author" entryXml
+        entryAuthors = findAllTags "name" entryXml
         entryPdfLink = findLink "application/pdf" entryXml
         entryLink = findLink "text/html" entryXml
 
@@ -100,4 +102,4 @@ makeEntry entryXml = Entry entryTitle entrySummary entryAuthors entryPdfLink ent
 --  Returns:
 --      `[Entry]`: An array of all present entries.
 parseFile :: String -> [Entry]
-parseFile xml = map ( makeEntry ) ( findAllEntries ( TagSoup.parseTags xml ) )
+parseFile xml = [ makeEntry potentialEntry | potentialEntry <- findAllEntries ( TagSoup.parseTags xml ), length potentialEntry > 0 ]

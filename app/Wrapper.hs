@@ -1,4 +1,4 @@
-module Wrapper ( split, createUrl ) where
+module Wrapper where
 
 baseUrl :: String
 baseUrl = "https://export.arxiv.org/api/query?"
@@ -70,7 +70,7 @@ parseSort x = "&sortBy=" ++ x
 --  Returns:
 --      `String`: The properly formed addition to API URL request with sort order.
 parseOrder :: String -> String
-parseOrder x = "&sortOrder=" ++ x ++ "cending"
+parseOrder x = "&sortOrder=" ++ x ++ "ending"
 
 -- |Parse an argument and apply its parsing function, returning its URL addition.
 --  Arguments:
@@ -81,7 +81,7 @@ parseOrder x = "&sortOrder=" ++ x ++ "cending"
 --  Returns:
 --      `String`: The addition to the complete URL request.
 parseArgument :: String -> String
-parseArgument ( x:' ':xs ) = ( parser . init ) xs
+parseArgument ( x:' ':xs ) = parser xs
     where 
         parser = case x of
             'f' -> parseSearchField
@@ -91,7 +91,7 @@ parseArgument ( x:' ':xs ) = ( parser . init ) xs
             's' -> parseSort
             'o' -> parseOrder
             _   -> \_ -> ""
-parseArgument _ = ""
+parseArgument _ = []
 
 -- |Convert a query to an array of URL additions, split by dashes.
 --  Arguments:
