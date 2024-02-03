@@ -118,12 +118,3 @@ getDefaults d = [defField, defSearch, defBegin, defMaxResults, defSort, defOrder
 query :: String -> String -> String
 query x d = toUrl x defs
     where defs = getDefaults ( Wrapper.split ( == ( '\n' ) ) d )
-
--- |Make a userland query and return a list of entries in the result.
---  Arguments:
---      `String`: The userland query to parse.
---      `String`: The .config file text, for default values.
---  Returns:
---      `[Parser.Entry]`: A list of entries with parsed information from the XML.
-makeEntries :: String -> String -> [Parser.Entry]
-makeEntries x d = Parser.parseFile ( query x d )
