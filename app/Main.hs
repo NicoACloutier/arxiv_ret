@@ -9,25 +9,37 @@ import qualified Parser
 import qualified Brick.Main as M
 import Brick.Types ( Widget )
 import Brick.Widgets.Core 
-    ( (<+>), (<=>), vBox, str, strWrap )
+    ( (<+>), (<=>), vBox, str, strWrap, emptyWidget )
 import qualified Brick.Widgets.Center as C
 import qualified Brick.Widgets.Border as B
 
-addIntermediates :: [Widget ()] -> Widget () -> [Widget ()]
-addIntermediates ( x:xs ) intermediate = [x, intermediate] ++ addIntermediates xs intermediate
-addIntermediates _ _ = []
+interAdd :: [Widget ()] -> Widget () -> [Widget ()]
+interAdd ( x:xs ) intermediate = [x, intermediate] ++ interAdd xs intermediate
+interAdd _ _ = []
 
 titles :: [Parser.Entry] -> Widget ()
 titles x = foldl ( <=> ) ( head titles ) ( tail titles )
-    where titles = addIntermediates ( map ( strWrap . Parser.title ) x ) ( B.hBorder )
+    where titles = interAdd ( map ( strWrap . Parser.title ) x ) ( B.hBorder )
+
+displayAuths :: [String] -> String
+displayAuths ( x:[] ) = x
+displayAuths ( x:xs ) = x ++ ", " ++ displayAuths xs
+
+display :: Parser.Entry -> Widget ()
+display entry = foldl ( <=> ) ( head elements ) ( tail elements )
+    where elements = interAdd ( [ strWrap ( Parser.title entry ),
+                                  strWrap ( "Authors: " ++ displayAuths ( Parser.authors entry ) ),
+                                  strWrap ( Parser.summary entry ),
+                                  str ( "Link: " ++ Parser.link entry ),
+                                  str ( "PDF link: " ++ Parser.pdfLink entry )
+                                ] ) ( B.hBorder )
 
 ui :: [Parser.Entry] -> Widget ()
 ui entryInputs =
     vBox [ B.hBorderWithLabel (str "arXiv retriever"),
            ( titles entryInputs
-           <+> C.center ( str "" )
            <+> B.vBorder
-           <+> (str ""))
+           <+> display ( head entryInputs ) )
          ]
 
 main :: IO ()

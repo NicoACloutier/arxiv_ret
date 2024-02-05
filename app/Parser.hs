@@ -22,7 +22,9 @@ data Entry = Entry { title :: String,
 --  Returns:
 --      `String`: The string without newlines.
 removeNewline :: String -> String
-removeNewline ( '\n':xs ) = removeNewline ( tail xs )
+removeNewline ( ' ':'\n':xs ) = removeNewline xs
+removeNewline ( '\n':' ':xs  ) = removeNewline xs
+removeNewline ( '\n':xs ) = " " ++ removeNewline xs
 removeNewline ( x:xs ) = [x] ++ removeNewline xs
 removeNewline _ = ""
 
