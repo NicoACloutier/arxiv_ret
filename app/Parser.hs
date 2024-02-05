@@ -16,6 +16,16 @@ data Entry = Entry { title :: String,
                      link :: String }
     deriving ( Read, Show, Eq )
 
+-- |Remove all newlines from a string.
+--  Arguments:
+--      `String`: The string to remove newlines from.
+--  Returns:
+--      `String`: The string without newlines.
+removeNewline :: String -> String
+removeNewline ( '\n':xs ) = removeNewline ( tail xs )
+removeNewline ( x:xs ) = [x] ++ removeNewline xs
+removeNewline _ = ""
+
 -- |Return everything in a list of XML tags up until the closing tab of a particular type.
 --  Arguments:
 --      `String`: The closing tag to terminate on.
@@ -90,11 +100,11 @@ findLink _ _ = ""
 makeEntry :: [TagSoup.Tag String] -> Entry
 makeEntry entryXml = Entry entryTitle entrySummary entryAuthors entryPdfLink entryLink
     where
-        entryTitle = TagSoup.fromTagText ( head ( findTag "title" entryXml ) )
-        entrySummary = TagSoup.fromTagText ( head ( findTag "summary" entryXml ) )
-        entryAuthors = findAllTags "name" entryXml
-        entryPdfLink = findLink "application/pdf" entryXml
-        entryLink = findLink "text/html" entryXml
+        entryTitle = removeNewline ( TagSoup.fromTagText ( head ( findTag "title" entryXml ) ) )
+        entrySummary = removeNewline ( TagSoup.fromTagText ( head ( findTag "summary" entryXml ) ) )
+        entryAuthors = map removeNewline ( findAllTags "name" entryXml )
+        entryPdfLink = removeNewline ( findLink "application/pdf" entryXml )
+        entryLink = removeNewline ( findLink "text/html" entryXml )
 
 -- |Parse an XML file, returning all of its entries.
 --  Arguments:
