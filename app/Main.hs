@@ -8,11 +8,27 @@ import qualified Parser
 
 import qualified Brick.Main as M
 import Brick.Types ( Widget )
-import Brick.Widgets.Core ( (<=>), vBox, str )
+import Brick.Widgets.Core 
+    ( (<+>), (<=>), vBox, str, strWrap )
+import qualified Brick.Widgets.Center as C
+import qualified Brick.Widgets.Border as B
 
-ui :: [String] -> Widget ()
-ui titleInput = vBox [ foldl (<=>) ( head titleArray ) ( tail titleArray ) ]
-    where titleArray = map str titleInput
+addIntermediates :: [Widget ()] -> Widget () -> [Widget ()]
+addIntermediates ( x:xs ) intermediate = [x, intermediate] ++ addIntermediates xs intermediate
+addIntermediates _ _ = []
+
+titles :: [Parser.Entry] -> Widget ()
+titles x = foldl ( <=> ) ( head titles ) ( tail titles )
+    where titles = addIntermediates ( map ( strWrap . Parser.title ) x ) ( B.hBorder )
+
+ui :: [Parser.Entry] -> Widget ()
+ui entryInputs =
+    vBox [ B.hBorderWithLabel (str "arXiv retriever"),
+           ( titles entryInputs
+           <+> C.center ( str "" )
+           <+> B.vBorder
+           <+> (str ""))
+         ]
 
 main :: IO ()
 main = do
@@ -24,6 +40,4 @@ main = do
     let responseString = LazyChar8.unpack ( response )
     let entries = Parser.parseFile responseString
     
-    let titles = map Parser.title entries
-
-    M.simpleMain ( ui titles )
+    M.simpleMain ( ui entries )
