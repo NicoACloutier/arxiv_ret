@@ -115,6 +115,9 @@ getDefaults d = [defField, defSearch, defBegin, defMaxResults, defSort, defOrder
 --  Returns:
 --      `String`: The URL for XML retrieval.
 query :: [String] -> String -> String
+query [] d = toUrl "" defs
+    where 
+        defs = getDefaults ( Wrapper.split ( == ( '\n' ) ) d )
 query x d = toUrl args defs
     where 
         defs = getDefaults ( Wrapper.split ( == ( '\n' ) ) d )
