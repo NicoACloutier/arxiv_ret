@@ -3,15 +3,15 @@ module Query where
 import qualified Wrapper
 
 searchFieldOptions :: [String]
-searchFieldOptions = ["ti", "au", "abs", "co", "jr", "cat", "rn", "id", "all"]
+searchFieldOptions = ["-ti", "-au", "-abs", "-co", "-jr", "-cat", "-rn", "-id", "-all"]
 beginOptions :: [String]
-beginOptions = ["b"]
+beginOptions = ["-b"]
 maxResultsOptions :: [String]
-maxResultsOptions = ["m"]
+maxResultsOptions = ["-m"]
 sortOptions :: [String]
-sortOptions = ["s"]
+sortOptions = ["-s"]
 orderOptions :: [String]
-orderOptions = ["asc", "desc"]
+orderOptions = ["-asc", "-desc"]
 
 -- |Find an option after a dash, returning the option if present, otherwise the default value.
 --      NOTE: This is meant for argumentless options, such as `-desc` and `-cat`.
