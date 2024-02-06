@@ -5,6 +5,7 @@ import qualified Data.ByteString.Lazy.Char8 as LazyChar8
 import qualified System.Environment
 import qualified Query
 import qualified Parser
+import qualified Config
 
 import qualified Brick.Main as M
 import Brick.Types ( Widget )
@@ -45,7 +46,8 @@ ui entryInputs =
 main :: IO ()
 main = do
     arguments <- System.Environment.getArgs
-    defaults <- readFile "./arxivret.config"
+    defaults = [Config.searchField, Config.searchQuery, Config.beginning, 
+                Config.maximum, Config.sortKey, Config.sortOrder]
     
     let url = Query.query arguments defaults
     response <- Network.HTTP.Conduit.simpleHttp url

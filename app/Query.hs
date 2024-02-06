@@ -92,22 +92,6 @@ findLine :: String -> [String] -> String -> String
 findLine m ( x:xs ) d = if m == ( take ( length m ) x ) then ( drop ( ( length m ) + 1 ) x ) else findLine m xs d
 findLine _ [] d = d
 
--- |Get a list of defaults in the .config file.
---  Arguments:
---      `[String]`: The .config file text, split by newlines.
---  Returns:
---      `[String]`: The default values.
---          NOTE: will be in order: field, query, start #, max results, sort key, order.
-getDefaults :: [String] -> [String]
-getDefaults d = [defField, defSearch, defBegin, defMaxResults, defSort, defOrder]
-    where
-        defField = findLine "f" d "cat"
-        defSearch = findLine "q" d "cs.CL"
-        defBegin = findLine "b" d "0"
-        defMaxResults = findLine "m" d "10"
-        defSort = findLine "s" d "submitted"
-        defOrder = findLine "o" d "desc"
-
 -- |Make a userland query, returning the URL for arXiv retrieval.
 --  Arguments:
 --      `[String]`: The userland query to parse.
@@ -115,10 +99,6 @@ getDefaults d = [defField, defSearch, defBegin, defMaxResults, defSort, defOrder
 --  Returns:
 --      `String`: The URL for XML retrieval.
 query :: [String] -> String -> String
-query [] d = toUrl "" defs
-    where 
-        defs = getDefaults ( Wrapper.split ( == ( '\n' ) ) d )
-query x d = toUrl args defs
-    where 
-        defs = getDefaults ( Wrapper.split ( == ( '\n' ) ) d )
-        args = tail ( foldl (++) "" [ " " ++ arg | arg <- x ] )
+query [] d = toUrl "" d
+query x d = toUrl args d
+    where args = tail ( foldl (++) "" [ " " ++ arg | arg <- x ] )
