@@ -46,8 +46,8 @@ ui entryInputs =
 main :: IO ()
 main = do
     arguments <- System.Environment.getArgs
-    defaults = [Config.searchField, Config.searchQuery, Config.beginning, 
-                Config.maximum, Config.sortKey, Config.sortOrder]
+    let defaults = [Config.searchField, Config.searchQuery, Config.beginning, 
+                    Config.maximum, Config.sortKey, Config.sortOrder]
     
     let url = Query.query arguments defaults
     response <- Network.HTTP.Conduit.simpleHttp url

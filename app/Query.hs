@@ -95,10 +95,10 @@ findLine _ [] d = d
 -- |Make a userland query, returning the URL for arXiv retrieval.
 --  Arguments:
 --      `[String]`: The userland query to parse.
---      `String`: The .config file text, for default values.
+--      `[String]`: The default value configurations.
 --  Returns:
 --      `String`: The URL for XML retrieval.
-query :: [String] -> String -> String
+query :: [String] -> [String] -> String
 query [] d = toUrl "" d
 query x d = toUrl args d
     where args = tail ( foldl (++) "" [ " " ++ arg | arg <- x ] )
