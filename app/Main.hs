@@ -1,37 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
-{-# LANGUAGE CPP #-}
 module Main where
-
-import Lens.Micro ((^.))
-import Lens.Micro.TH (makeLenses)
-import Lens.Micro.Mtl
-import Control.Monad (void, forever)
-import Control.Concurrent (threadDelay, forkIO)
-#if !(MIN_VERSION_base(4,11,0))
-import Data.Monoid
-#endif
-import qualified Graphics.Vty as V
-
-import Brick.BChan
-import Brick.Main
-  ( App(..)
-  , showFirstCursor
-  , customMainWithDefaultVty
-  , halt
-  )
-import Brick.AttrMap
-  ( attrMap
-  )
-import Brick.Types
-  ( Widget
-  , EventM
-  , BrickEvent(..)
-  )
-import Brick.Widgets.Core
-  ( (<=>)
-  , str
-  )
 
 import qualified Network.HTTP.Conduit
 import qualified Data.ByteString.Lazy.Char8 as LazyChar8
@@ -41,20 +9,16 @@ import qualified Parser
 import qualified Config
 
 import qualified Graphics.Vty as V
-import Lens.Micro ((^.))
+import Lens.Micro ( (^.) )
 import Lens.Micro.TH ( makeLenses )
+import Brick.AttrMap ( attrMap )
 import Lens.Micro.Mtl
-import Control.Monad (void, forever)
-import Control.Concurrent (threadDelay, forkIO)
-import Data.Monoid
+import Control.Monad ( void )
 
 import qualified Brick.Main as M
-import Brick.Types ( Widget )
-import Brick ( App (..), BrickEvent (..), EventM, )
-import Brick.Widgets.Core 
-    ( (<+>), (<=>), vBox, str, strWrap, emptyWidget )
-import Brick.AttrMap ( attrMap )
-import qualified Brick.Widgets.Center as C
+import Brick.Main ( App(..), showFirstCursor, halt )
+import Brick.Types ( Widget, EventM, BrickEvent(..) )
+import Brick.Widgets.Core  ( (<+>), (<=>), vBox, str, strWrap, emptyWidget )
 import qualified Brick.Widgets.Border as B
 
 data Screen = Screen { entryArray :: [Parser.Entry],
