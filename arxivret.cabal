@@ -78,7 +78,9 @@ executable arxivret
                       tagsoup,
                       brick,
                       vty,
-                      text
+                      microlens-th,
+                      microlens,
+                      microlens-mtl
 
     -- Directories containing source files.
     hs-source-dirs:   app
