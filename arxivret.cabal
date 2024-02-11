@@ -80,8 +80,9 @@ executable arxivret
                       vty,
                       microlens-th,
                       microlens,
+                      Hclip,
                       microlens-mtl
-
+    
     -- Directories containing source files.
     hs-source-dirs:   app
 

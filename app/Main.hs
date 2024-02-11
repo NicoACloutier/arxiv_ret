@@ -1,9 +1,11 @@
 {-# LANGUAGE TemplateHaskell #-}
+
 module Main where
 
 import qualified Network.HTTP.Conduit
 import qualified Data.ByteString.Lazy.Char8 as LazyChar8
 import qualified System.Environment
+import qualified System.Hclip
 import qualified Query
 import qualified Parser
 import qualified Config
@@ -25,8 +27,18 @@ import qualified Brick.Widgets.Border as B
 --  Fields:
 --      `entryArray :: [Parser.Entry]`: An array of entries to display.
 --      `index :: Integer`: The current index of the entry to display.
+--      `copy :: String`: The link to copy to clipboard.
 data Screen = Screen { entryArray :: [Parser.Entry],
-                       index :: Integer}
+                       index :: Integer,
+                       copy :: String 
+                     }
+
+information :: String
+information = "To close the application, press Q. Navigate with arrow keys.\
+              \\nYou may press C to copy a file's link to the\
+              \ clipboard, and D to copy a link to its PDF.\nThe link will not be copied until \
+              \the program is closed.\nBy default, nothing is copied. To cancel a copy, press X\
+              \."
 
 -- |The application state.
 --      NOTE: This wraps the Screen type to allow it to be passed in its entirety to functions,
@@ -90,15 +102,20 @@ display entry = foldl ( <=> ) ( head elements ) ( tail elements )
 --      `[Widget Name]`: The array of widgets used to generate UI.
 ui :: St -> [Widget Name]
 ui st = [
-              vBox [ B.hBorderWithLabel (str "arXiv retriever"),
-                     ( titles ( entryInputs )
-                     <+> B.vBorder
-                     <+> display ( entryInputs !! fromInteger ind ) )
-                   ]
-            ]
+            vBox [ B.hBorderWithLabel (str "arXiv retriever"),
+                   ( titles ( entryInputs )
+                   <+> B.vBorder
+                   <+> display ( entryInputs !! fromInteger ind ) ),
+                   B.hBorderWithLabel (str "Information"),
+                   (str information),
+                   (str ( "Current copied value: `" ++ copyVal ++ "`.") ),
+                   B.hBorder
+                 ]
+        ]
                 where 
                     entryInputs = entryArray ( st^.screen )
                     ind = index ( st^.screen )
+                    copyVal = if copy ( st^.screen ) /= "" then copy ( st^.screen ) else "NONE"
 
 -- |Decrease the present index of a screen state.
 --  Arguments:
@@ -108,7 +125,7 @@ ui st = [
 decrease :: Screen -> Screen
 decrease s = case index s of
     0 -> s
-    _ -> Screen ( entryArray s ) ( ( index s ) - 1 )
+    _ -> Screen ( entryArray s ) ( ( index s ) - 1 ) ( copy s )
 
 -- |Increase the present index of a screen state.
 --  Arguments:
@@ -119,7 +136,33 @@ increase :: Screen -> Screen
 increase s = if maximumIndex then s else increasedS
     where
         maximumIndex = index s == ( toInteger $ length $ entryArray s ) - 1
-        increasedS = Screen ( entryArray s ) ( ( index s ) + 1 )
+        increasedS = Screen ( entryArray s ) ( ( index s ) + 1 ) ( copy s )
+
+-- |Set the current copy link value to the current article link.
+--  Arguments:
+--      `Screen`: The initial screen.
+--  Returns:
+--      `Screen`: The screen with the current article's link in the copy field.
+copyVal :: Screen -> Screen
+copyVal s = Screen ( entryArray s ) ( index s ) currentLink
+    where currentLink = Parser.link ( entryArray s !! fromInteger ( index s ) )
+
+-- |Set the current copy link value to the current article PDF link.
+--  Arguments:
+--      `Screen`: The initial screen.
+--  Returns:
+--      `Screen`: The screen with the current article's PDF link in the copy field.
+copyPdf :: Screen -> Screen
+copyPdf s = Screen ( entryArray s ) ( index s ) currentLink
+    where currentLink = Parser.pdfLink ( entryArray s !! fromInteger ( index s ) )
+
+-- |Set the current copy link value to the empty string.
+--  Arguments:
+--      `Screen`: The initial screen.
+--  Returns:
+--      `Screen`: The screen with the empty string in the copy field.
+removeCopy :: Screen -> Screen
+removeCopy s = Screen ( entryArray s ) ( index s ) ( "" )
 
 -- |Handle an application event.
 --  Arguments:
@@ -136,6 +179,9 @@ appEvent ( VtyEvent ( V.EvKey V.KEsc [] ) ) = M.halt
 appEvent ( VtyEvent ( V.EvKey ( V.KChar 'q' ) [] ) ) = M.halt
 appEvent ( VtyEvent ( V.EvKey V.KUp [] ) ) = screen %= decrease
 appEvent ( VtyEvent ( V.EvKey V.KDown [] ) ) = screen %= increase
+appEvent ( VtyEvent ( V.EvKey ( V.KChar 'c' ) [] ) ) = screen %= copyVal
+appEvent ( VtyEvent ( V.EvKey ( V.KChar 'd' ) [] ) ) = screen %= copyPdf
+appEvent ( VtyEvent ( V.EvKey ( V.KChar 'x' ) [] ) ) = screen %= removeCopy
 appEvent _ = return ()
 
 -- |The arXiv retriever application.
@@ -164,8 +210,11 @@ main = do
     let responseString = LazyChar8.unpack ( response )
         entries = Parser.parseFile responseString
         screen = Screen { entryArray = entries,
-                          index = 0
+                          index = 0,
+                          copy = ""
                         } 
         st = St { _screen = screen }
     
-    void $ M.defaultMain app $ st
+    finalSt <- M.defaultMain app $ st
+    let finalScreen = _screen finalSt
+    if copy finalScreen /= "" then System.Hclip.setClipboard ( copy finalScreen ) else return ()
