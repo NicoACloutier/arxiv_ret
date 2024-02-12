@@ -64,12 +64,12 @@ convertSort _ = ""
 makeProper :: [String] -> [String] -> String
 makeProper improper defaults = foldl (++) "" [field, search, begin, maxResults, sort, order]
     where
-        field = "-f " ++ ( findOption improper searchFieldOptions ( defaults !! 0 ) )
-        search = "-q " ++ ( findSearch improper searchFieldOptions ( defaults !! 1 ) )
-        begin = "-b " ++ ( findSearch improper beginOptions ( defaults !! 2 ) )
-        maxResults = "-m " ++ ( findSearch improper maxResultsOptions ( defaults !! 3 ) )
-        sort = "-s " ++ convertSort ( findSearch improper sortOptions ( defaults !! 4 ) )
-        order = "-o " ++ ( findOption improper orderOptions ( defaults !! 5 ) )
+        field = "|f " ++ ( findOption improper searchFieldOptions ( defaults !! 0 ) )
+        search = "|q " ++ ( findSearch improper searchFieldOptions ( defaults !! 1 ) )
+        begin = "|b " ++ ( findSearch improper beginOptions ( defaults !! 2 ) )
+        maxResults = "|m " ++ ( findSearch improper maxResultsOptions ( defaults !! 3 ) )
+        sort = "|s " ++ convertSort ( findSearch improper sortOptions ( defaults !! 4 ) )
+        order = "|o " ++ ( findOption improper orderOptions ( defaults !! 5 ) )
 
 -- |Convert an improper query to a URL, passing it to the API Wrapper.
 --  Arguments:

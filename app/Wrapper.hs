@@ -93,21 +93,21 @@ parseArgument ( x:' ':xs ) = parser xs
             _   -> \_ -> ""
 parseArgument _ = []
 
--- |Convert a query to an array of URL additions, split by dashes.
+-- |Convert a query to an array of URL additions, split by bars.
 --  Arguments:
 --      `String`: The query string.
---          Example: "-f cat -q cs.cl -b 0 -m 10 -s lastUpdatedDate -o desc"
+--          Example: "|f cat|q cs.cl|b 0|m 10 -s lastUpdatedDate|o desc"
 --  Returns:
 --      `[String]`: The array of query additions.
 --          Example: ["search_query=cat", ":cs.cl", "&start=0", "&max_results=10", 
 --                    "&sortBy=lastUpdatedDate", "&sortOrder=descending"]
 takeQuery :: String -> [String]
-takeQuery query = map parseArgument ( split ( == ( '-' ) ) query )
+takeQuery query = map parseArgument ( split ( == ( '|' ) ) query )
 
 -- |Convert a query to a complete URL request URL.
 --  Arguments:
 --      `String`: The query string.
---          Example: "-f cat -q cs.cl -b 0 -m 10 -s lastUpdatedDate -o desc"
+--          Example: "|f cat|q cs.cl|b 0|m 10 -s lastUpdatedDate|o desc"
 --  Returns:
 --      `String`: The arXiv API request URL.
 createUrl :: String -> String
