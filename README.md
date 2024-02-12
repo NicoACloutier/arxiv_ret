@@ -2,6 +2,8 @@
 
 An open source TUI application to retrieve papers from the arXiv using its public API. The source code in this directory compiles with `cabal` to an executable that can be run from the command line. Default execution options can be edited in the file in the `app` directory entitled `Config.hs`. Information on these options can be found in the file.
 
+![A screenshot of the arXiv retriever.](/screenshot.png?raw=true "A screenshot of the arXiv retriever.")
+
 ## Options
 
 ### Search field and query
