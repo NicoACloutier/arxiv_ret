@@ -20,7 +20,8 @@ import Control.Monad ( void )
 import qualified Brick.Main as M
 import Brick.Main ( App(..), showFirstCursor, halt )
 import Brick.Types ( Widget, EventM, BrickEvent(..) )
-import Brick.Widgets.Core  ( (<+>), (<=>), vBox, str, strWrap, emptyWidget )
+import Brick.Widgets.Core
+    ( (<+>), (<=>), vBox, str, strWrap, emptyWidget )
 import qualified Brick.Widgets.Border as B
 
 -- |A screen state.
@@ -28,13 +29,16 @@ import qualified Brick.Widgets.Border as B
 --      `entryArray :: [Parser.Entry]`: An array of entries to display.
 --      `index :: Integer`: The current index of the entry to display.
 --      `copy :: String`: The link to copy to clipboard.
+--      `place :: Integer`: The current place within the displayed paper.
 data Screen = Screen { entryArray :: [Parser.Entry],
                        index :: Integer,
-                       copy :: String 
+                       copy :: String,
+                       place :: Integer
                      }
 
 information :: String
-information = "To close the application, press Q. Navigate with arrow keys.\
+information = "To close the application, press Q. Navigate the papers with arrow keys.\
+              \\nNavigate within a paper's fields using W and S.\
               \\nYou may press C to copy a file's link to the\
               \ clipboard, and D to copy a link to its PDF.\nThe link will not be copied until \
               \the program is closed.\nBy default, nothing is copied. To cancel a copy, press X\
@@ -52,6 +56,9 @@ makeLenses ''St
 -- |The application name.
 data Name = ArXivRet
     deriving ( Ord, Eq, Show )
+
+numFields :: Integer
+numFields = 5
 
 -- |Add an intermediate widget within every two adjacent elements of a wdiget array.
 --  Arguments:
@@ -77,23 +84,24 @@ titles x = foldl ( <=> ) ( head titles ) ( tail titles )
 --      `[String]`: An array of author names.
 --  Returns:
 --      `String`: Those same names in a single comma-delimited string.
-displayAuths :: [String] -> String
-displayAuths ( x:[] ) = x
-displayAuths ( x:xs ) = x ++ ", " ++ displayAuths xs
+dAuths :: [String] -> String
+dAuths ( x:[] ) = x
+dAuths ( x:xs ) = x ++ ", " ++ dAuths xs
 
 -- |Display a single entry as the primary view entry in the application.
 --  Arguments:
+--      `Int`: The place in the paper.
 --      `Parser.Entry`: The entry to display.
 --  Returns:
 --      `Widget Name`: The widget for displaying.
-display :: Parser.Entry -> Widget Name
-display entry = foldl ( <=> ) ( head elements ) ( tail elements )
-    where elements = interAdd ( [ strWrap ( Parser.title entry ),
-                                  strWrap ( "Authors: " ++ displayAuths ( Parser.authors entry ) ),
-                                  strWrap ( Parser.summary entry ),
-                                  str ( "Link: " ++ Parser.link entry ),
-                                  str ( "PDF link: " ++ Parser.pdfLink entry )
-                                ] ) ( B.hBorder )
+display :: Int -> Parser.Entry -> Widget Name
+display x n = foldl ( <=> ) ( head elements ) ( tail elements )
+    where elements = interAdd ( drop x [ strWrap ( Parser.title n ),
+                                         strWrap ( "Authors: " ++ dAuths ( Parser.authors n ) ),
+                                         strWrap ( Parser.summary n ),
+                                         str ( "Link: " ++ Parser.link n ),
+                                         str ( "PDF link: " ++ Parser.pdfLink n )
+                                       ] ) ( B.hBorder )
 
 -- |Create a user interface given the application state.
 --  Arguments:
@@ -103,9 +111,9 @@ display entry = foldl ( <=> ) ( head elements ) ( tail elements )
 ui :: St -> [Widget Name]
 ui st = [
             vBox [ B.hBorderWithLabel (str "arXiv retriever"),
-                   ( titles ( entryInputs )
+                   ( titles ( drop ( fromInteger ind ) entryInputs )
                    <+> B.vBorder
-                   <+> display ( entryInputs !! fromInteger ind ) ),
+                   <+> display ( fromInteger pl ) ( entryInputs !! fromInteger ind ) ),
                    B.hBorderWithLabel (str "Information"),
                    (str information),
                    (str ( "Current copied value: `" ++ copyVal ++ "`.") ),
@@ -116,6 +124,7 @@ ui st = [
                     entryInputs = entryArray ( st^.screen )
                     ind = index ( st^.screen )
                     copyVal = if copy ( st^.screen ) /= "" then copy ( st^.screen ) else "NONE"
+                    pl = place ( st^.screen )
 
 -- |Decrease the present index of a screen state.
 --  Arguments:
@@ -125,7 +134,7 @@ ui st = [
 decrease :: Screen -> Screen
 decrease s = case index s of
     0 -> s
-    _ -> Screen ( entryArray s ) ( ( index s ) - 1 ) ( copy s )
+    _ -> Screen ( entryArray s ) ( ( index s ) - 1 ) ( copy s ) 0
 
 -- |Increase the present index of a screen state.
 --  Arguments:
@@ -136,7 +145,7 @@ increase :: Screen -> Screen
 increase s = if maximumIndex then s else increasedS
     where
         maximumIndex = index s == ( toInteger $ length $ entryArray s ) - 1
-        increasedS = Screen ( entryArray s ) ( ( index s ) + 1 ) ( copy s )
+        increasedS = Screen ( entryArray s ) ( ( index s ) + 1 ) ( copy s ) 0
 
 -- |Set the current copy link value to the current article link.
 --  Arguments:
@@ -144,7 +153,7 @@ increase s = if maximumIndex then s else increasedS
 --  Returns:
 --      `Screen`: The screen with the current article's link in the copy field.
 copyVal :: Screen -> Screen
-copyVal s = Screen ( entryArray s ) ( index s ) currentLink
+copyVal s = Screen ( entryArray s ) ( index s ) currentLink ( place s )
     where currentLink = Parser.link ( entryArray s !! fromInteger ( index s ) )
 
 -- |Set the current copy link value to the current article PDF link.
@@ -153,8 +162,26 @@ copyVal s = Screen ( entryArray s ) ( index s ) currentLink
 --  Returns:
 --      `Screen`: The screen with the current article's PDF link in the copy field.
 copyPdf :: Screen -> Screen
-copyPdf s = Screen ( entryArray s ) ( index s ) currentLink
+copyPdf s = Screen ( entryArray s ) ( index s ) currentLink ( place s )
     where currentLink = Parser.pdfLink ( entryArray s !! fromInteger ( index s ) )
+
+-- |Decrease the present place within a paper.
+--  Arguments:
+--      `Screen`: The initial screen place.
+--  Returns:
+--      `Screen`: The screen with a decreased place.
+decreasePlace :: Screen -> Screen
+decreasePlace s = Screen ( entryArray s ) ( index s ) ( copy s ) ( newPlace )
+    where newPlace = if place s == 0 then 0 else ( place s ) - 1
+
+-- |Increase the present place within a paper.
+--  Arguments:
+--      `Screen`: The initial screen place.
+--  Returns:
+--      `Screen`: The screen with an increased place.
+increasePlace :: Screen -> Screen
+increasePlace s = Screen ( entryArray s ) ( index s ) ( copy s ) ( newPlace )
+    where newPlace = min ( ( place s ) + 1 ) ( numFields - 1 )
 
 -- |Set the current copy link value to the empty string.
 --  Arguments:
@@ -162,7 +189,7 @@ copyPdf s = Screen ( entryArray s ) ( index s ) currentLink
 --  Returns:
 --      `Screen`: The screen with the empty string in the copy field.
 removeCopy :: Screen -> Screen
-removeCopy s = Screen ( entryArray s ) ( index s ) ( "" )
+removeCopy s = Screen ( entryArray s ) ( index s ) ( "" ) ( place s )
 
 -- |Handle an application event.
 --  Arguments:
@@ -181,6 +208,8 @@ appEvent ( VtyEvent ( V.EvKey V.KUp [] ) ) = screen %= decrease
 appEvent ( VtyEvent ( V.EvKey V.KDown [] ) ) = screen %= increase
 appEvent ( VtyEvent ( V.EvKey ( V.KChar 'c' ) [] ) ) = screen %= copyVal
 appEvent ( VtyEvent ( V.EvKey ( V.KChar 'd' ) [] ) ) = screen %= copyPdf
+appEvent ( VtyEvent ( V.EvKey ( V.KChar 'w' ) [] ) ) = screen %= decreasePlace
+appEvent ( VtyEvent ( V.EvKey ( V.KChar 's' ) [] ) ) = screen %= increasePlace
 appEvent ( VtyEvent ( V.EvKey ( V.KChar 'x' ) [] ) ) = screen %= removeCopy
 appEvent _ = return ()
 
@@ -211,7 +240,8 @@ main = do
         entries = Parser.parseFile responseString
         screen = Screen { entryArray = entries,
                           index = 0,
-                          copy = ""
+                          copy = "",
+                          place = 0
                         } 
         st = St { _screen = screen }
     
