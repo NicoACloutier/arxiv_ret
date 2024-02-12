@@ -71,17 +71,15 @@ executable arxivret
 
     -- Other library packages from which modules are imported.
     build-depends:    base ^>=4.17.2.1,
-                      HTTP,
-                      network,
                       http-conduit,
                       bytestring,
                       tagsoup,
                       brick,
                       vty,
-                      microlens-th,
                       microlens,
-                      Hclip,
-                      microlens-mtl
+                      microlens-th,
+                      microlens-mtl,
+                      Hclip
     
     -- Directories containing source files.
     hs-source-dirs:   app
