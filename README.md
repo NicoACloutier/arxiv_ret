@@ -4,6 +4,20 @@ An open source TUI application to retrieve papers from the arXiv using its publi
 
 ![A screenshot of the arXiv retriever.](/screenshot.png?raw=true "A screenshot of the arXiv retriever.")
 
+## Dependencies
+This project depends on the following Haskell packages:
+- HTTP
+- network
+- http-conduit
+- bytestring
+- tagsoup
+- brick
+- vty
+- microlens-th
+- microlens
+- Hclip
+- microlens-mtl
+
 ## Options
 
 ### Search field and query
