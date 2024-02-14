@@ -2,6 +2,8 @@ module Config where
 
 -- EDIT THIS FILE to change default values.
 -- Make sure all values are left inside of quotes.
+-- After edits have been made, recompile the program.
+-- This can be done by deleting the `dist-newstyle/build` directory and running `cabal build`.
 
 -- |First argument: search field.
 --  This is the field that the search will be performed in.
